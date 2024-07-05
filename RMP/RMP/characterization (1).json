@@ -1,0 +1,72 @@
+[
+ {
+  "LabName": "BPC Budge Budge",
+  "LabID": "LAB1",
+  "Result1": 843.8,
+  "Result2": 843.8,
+  "Result3": 843.8
+ },
+ {
+  "LabName": "Geo chem Mumlund",
+  "LabID": "LAB2",
+  "Result1": 843.2,
+  "Result2": 843.6,
+  "Result3": 843.4
+ },
+ {
+  "LabName": "Ultra Plus Lab Mumbai",
+  "LabID": "LAB3",
+  "Result1": 844,
+  "Result2": 844.2,
+  "Result3": 844.2
+ },
+ {
+  "LabName": "IGPL Mumbai",
+  "LabID": "LAB4",
+  "Result1": 843.8,
+  "Result2": 843.9,
+  "Result3": 844
+ },
+ {
+  "LabName": "Intertech lab Mumbai",
+  "LabID": "LAB5",
+  "Result1": 843.6,
+  "Result2": 843.8,
+  "Result3": 843.6
+ },
+ {
+  "LabName": "Chemtech Lab,Pune",
+  "LabID": "LAB6",
+  "Result1": 844,
+  "Result2": 844,
+  "Result3": 844.2
+ },
+ {
+  "LabName": "Hardcastle Petrofer Pvt. Ltd.",
+  "LabID": "LAB7",
+  "Result1": 843.8,
+  "Result2": 843.7,
+  "Result3": 843.6
+ },
+ {
+  "LabName": "SGS",
+  "LabID": "LAB8",
+  "Result1": 844.1,
+  "Result2": 843.9,
+  "Result3": 844
+ },
+ {
+  "LabName": "Sterlite Lubricant",
+  "LabID": "LAB9",
+  "Result1": 844.7,
+  "Result2": 844.7,
+  "Result3": 844.2
+ },
+ {
+  "LabName": "Atlas Lab, Navi Mumbai",
+  "LabID": "LAB10",
+  "Result1": 844,
+  "Result2": 844.2,
+  "Result3": 844
+ }
+]

@@ -1,0 +1,6 @@
+@RMP_HostAddress = http://localhost:5125
+
+GET {{RMP_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

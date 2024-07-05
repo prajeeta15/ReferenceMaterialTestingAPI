@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "R+KOYnYjCUA8CECIsfI/cFEAcSxRYZ5h6Nz7mVmEBJU=",
+  "Source": "RMP",
+  "BasePath": "_content/RMP",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "RMP\\wwwroot",
+      "Source": "RMP",
+      "ContentRoot": "C:\\Users\\Prajeeta\\source\\repos\\RMP\\RMP\\wwwroot\\",
+      "BasePath": "_content/RMP",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Prajeeta\\source\\repos\\RMP\\RMP\\wwwroot\\index.html",
+      "SourceId": "RMP",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Prajeeta\\source\\repos\\RMP\\RMP\\wwwroot\\",
+      "BasePath": "_content/RMP",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    }
+  ]
+}
