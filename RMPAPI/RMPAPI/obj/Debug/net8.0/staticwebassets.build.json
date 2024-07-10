@@ -1,0 +1,39 @@
+{
+  "Version": 1,
+  "Hash": "cR9UUSKXPPkUDrgAepTZTd8aNxL2ejzAIT691gDTwXs=",
+  "Source": "RMPAPI",
+  "BasePath": "_content/RMPAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "RMPAPI\\wwwroot",
+      "Source": "RMPAPI",
+      "ContentRoot": "C:\\Users\\Prajeeta\\source\\repos\\RMPAPI\\RMPAPI\\wwwroot\\",
+      "BasePath": "_content/RMPAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\Prajeeta\\source\\repos\\RMPAPI\\RMPAPI\\wwwroot\\index.html",
+      "SourceId": "RMPAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Prajeeta\\source\\repos\\RMPAPI\\RMPAPI\\wwwroot\\",
+      "BasePath": "_content/RMPAPI",
+      "RelativePath": "index.html",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\index.html"
+    }
+  ]
+}
