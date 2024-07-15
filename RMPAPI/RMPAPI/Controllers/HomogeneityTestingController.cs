@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MathNet.Numerics.Distributions;
-using MathNet.Numerics.Statistics;
 
 namespace RMPAPI.Controllers
 {
@@ -14,7 +14,6 @@ namespace RMPAPI.Controllers
     [Route("api/[controller]")]
     public class HomogeneityTestingController : ControllerBase
     {
-        // POST api/homogeneitytesting/homogeneitytesting
         [HttpPost("HomogeneityTesting")]
         public async Task<IActionResult> HomogeneityTesting(IFormFile jsonfile, [FromForm] double probability, double umethod)
         {
@@ -93,8 +92,8 @@ namespace RMPAPI.Controllers
                 double SSW = deviations.Select(row => row.Select(deviation => Math.Pow(deviation, 2)).Sum()).Sum();
 
                 var dfRows = dataTable.Rows.Count - 1;
-                var dCol = dataTable.Columns.Count - 1;
-                var dfWithinRows = dfRows * dCol;
+                var dfColumns = dataTable.Columns.Count - 1;
+                var dfWithinRows = dfRows * dfColumns;
 
                 var MSB = SSB / dfRows;
                 var MSW = SSW / dfWithinRows;
@@ -102,56 +101,41 @@ namespace RMPAPI.Controllers
                 var SSC = dataTable.Rows.Count * meanOfColumns.Sum(mean => Math.Pow(mean - grandMean, 2));
                 var SSE = SSW - SSC;
                 var MSE = SSE / dfWithinRows;
-                var MSC = SSC / dCol;
+                var MSC = SSC / dfColumns;
 
                 var FRows = MSB / MSE;
                 var FColumns = MSC / MSE;
 
                 var pValueRows = 1 - FDistribution(FRows, dfRows, dfWithinRows);
-                var pValueColumns = 1 - FDistribution(FColumns, dCol, dfWithinRows);
+                var pValueColumns = 1 - FDistribution(FColumns, dfColumns, dfWithinRows);
 
                 probability = probability / 100;
-                var degree_freedom_row = dfRows;
-                var degree_freedom_column = dCol;
-                var degree_freedom_within = dfWithinRows;
-                var dof = (dfWithinRows + dCol);
-
+                var degreeFreedomRow = dfRows;
+                var degreeFreedomColumn = dfColumns;
+                var degreeFreedomWithin = dfWithinRows;
+                var dof = (dfWithinRows + dfColumns);
 
                 var fCritRows = FDistributionCriticalValue(1 - probability, dfRows, dfWithinRows);
-                var fCritColumns = FDistributionCriticalValue(1 - probability, dataTable.Columns.Count - 1, dfWithinRows);
+                var fCritColumns = FDistributionCriticalValue(1 - probability, dfColumns, dfWithinRows);
 
-                var fCritat95 = FisherSnedecor.InvCDF(dfRows, dof, 1 - probability);
-                var F_value = MSB / MSE;
-                var homogeneityTest = (F_value > fCritat95) ? "FAIL HOMOGENEITY TEST" : "PASS HOMOGENEITY TEST";
+                var fCritAt95 = FisherSnedecor.InvCDF(dfRows, dof, 1 - probability);
+                var FValue = MSB / MSE;
+                var homogeneityTest = (FValue > fCritAt95) ? "FAIL HOMOGENEITY TEST" : "PASS HOMOGENEITY TEST";
 
-                var U2bb = Math.Max(0, (MSB - MSE) / (dataTable.Columns.Count));
+                var uHomogeneity = Math.Pow((stdDevA1 / Math.Sqrt(3)), 2);
+                var U2bb = uHomogeneity;
+                var RelativeHomogeneity = uHomogeneity / stdDevA1;
+                var Ubb1 = uHomogeneity;
+                var ubb2 = U2bb;
+                var SWithin = Math.Sqrt(U2bb);
+                var UWithin = SWithin;
 
-                var Ubb1 = Math.Sqrt(U2bb);
+                var Uhom1 = uHomogeneity;
+                var Uhom2 = uHomogeneity;
 
-                var RelativeHomogeneity = (Ubb1 / grandMean) * 100;
-
-                var ubb2 = Math.Sqrt((MSE / (dataTable.Columns.Count)) * Math.Pow(2 / degree_freedom_within, 0.25));
-
-                var SWithin = Math.Sqrt(MSE);
-
-                var UWithin = SWithin / Math.Sqrt(dataTable.Columns.Count);
-
-                var Uhom1 = CalculateUhom1(Ubb1, UWithin);
-                var Uhom2 = CalculateUhom2(Ubb1, UWithin, umethod);
-
-                var resultsTable = new
+                var result = new HomogeneityTestingResult
                 {
-                    SumOfRows = sumOfRows,
-                    SumOfColumns = sumOfColumns,
-                    MeanOfRows = meanOfRows,
-                    MeanOfColumns = meanOfColumns,
-                    VarianceOfRows = varianceOfRows,
-                    VarianceOfColumns = varianceOfColumns
-                };
-
-                var result = new
-                {
-                    StandardDeviationTable = new
+                    StandardDeviationTable = new StandardDeviationTable
                     {
                         StandardDeviationA1 = stdDevA1,
                         StandardDeviationA2 = stdDevA2,
@@ -165,109 +149,104 @@ namespace RMPAPI.Controllers
                     },
                     Outliers = outliers,
                     DataWithoutOutliers = dataWithoutOutliers,
-                    ResultsTable = resultsTable,
-                    ANOVA = new
+                    ResultsTable = new ResultsTable
                     {
-                        deviations,
-                        SSB,
-                        SSC,
-                        SSW,
-                        SSE,
-                        degree_freedom_row,
-                        degree_freedom_column,
-                        degree_freedom_within,
-                        MSB,
-                        MSC,
-                        MSW,
-                        MSE,
-                        FRows,
-                        FColumns,
-                        pValueRows,
-                        pValueColumns,
-                        fCritRows,
-                        fCritColumns,
-                        Fvalue = F_value,
-                        FcriticalAt95 = fCritat95,
+                        SumOfRows = sumOfRows,
+                        SumOfColumns = sumOfColumns,
+                        MeanOfRows = meanOfRows,
+                        MeanOfColumns = meanOfColumns,
+                        VarianceOfRows = varianceOfRows,
+                        VarianceOfColumns = varianceOfColumns
+                    },
+                    ANOVA = new ANOVA
+                    {
+                        Deviations = deviations,
+                        SSB = SSB,
+                        SSC = SSC,
+                        SSW = SSW,
+                        SSE = SSE,
+                        DegreeFreedomRow = degreeFreedomRow,
+                        DegreeFreedomColumn = degreeFreedomColumn,
+                        DegreeFreedomWithin = degreeFreedomWithin,
+                        MSB = MSB,
+                        MSC = MSC,
+                        MSW = MSW,
+                        MSE = MSE,
+                        FRows = FRows,
+                        FColumns = FColumns,
+                        PValueRows = pValueRows,
+                        PValueColumns = pValueColumns,
+                        FCritRows = fCritRows,
+                        FCritColumns = fCritColumns,
+                        FValue = FValue,
+                        FCriticalAt95 = fCritAt95,
                         HomogeneityTest = homogeneityTest
                     },
-                    AdditionalCalculations = new
+                    UHomogeneityTable = new UHomogeneityTable
                     {
                         U2bb = U2bb,
                         RelativeHomogeneity = RelativeHomogeneity,
                         Ubb1 = Ubb1,
-                        ubb2 = ubb2,
+                        Ubb2 = ubb2,
                         SWithin = SWithin,
                         UWithin = UWithin
                     },
-                    Uhom1 = new
-                    {
-                        Uhom1
-                    },
-                    Uhom2 = new
-                    {
-                        Uhom2
-                    }
+                    Uhom1 = Uhom1,
+                    Uhom2 = Uhom2
                 };
 
                 return Ok(result);
             }
-            catch (FileNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error: " + ex.Message);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
 
-        private double CalculateStandardDeviation(List<double> values)
+        private static double CalculateStandardDeviation(List<double> values)
         {
-            var mean = values.Average();
-            var variance = values.Average(v => Math.Pow(v - mean, 2));
-            return Math.Sqrt(variance);
+            var avg = values.Average();
+            return Math.Sqrt(values.Sum(v => Math.Pow(v - avg, 2)) / (values.Count - 1));
         }
 
-        private double CalculateVariance(List<double> values)
+        private static double CalculateVariance(List<double> values)
         {
-            var mean = values.Average();
-            return values.Average(v => Math.Pow(v - mean, 2));
+            var avg = values.Average();
+            return values.Sum(v => Math.Pow(v - avg, 2)) / (values.Count - 1);
         }
 
-        private DataTable ToDataTable(List<HomogeneityData> data)
+        private static double FDistribution(double f, double d1, double d2)
         {
+            return 1.0 - FisherSnedecor.CDF(d1, d2, f);
+        }
+
+        private static double FDistributionCriticalValue(double p, double d1, double d2)
+        {
+            return FisherSnedecor.InvCDF(d1, d2, p);
+        }
+
+        private static DataTable ToDataTable<T>(IList<T> data)
+        {
+            var properties = typeof(T).GetProperties();
             var dataTable = new DataTable();
 
-            dataTable.Columns.Add("Attribute1", typeof(double));
-            dataTable.Columns.Add("Attribute2", typeof(double));
-            dataTable.Columns.Add("Attribute3", typeof(double));
+            foreach (var prop in properties)
+            {
+                dataTable.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            }
 
             foreach (var item in data)
             {
-                dataTable.Rows.Add(item.Attribute1, item.Attribute2, item.Attribute3);
+                var values = new object[properties.Length];
+                for (var i = 0; i < properties.Length; i++)
+                {
+                    values[i] = properties[i].GetValue(item, null);
+                }
+
+                dataTable.Rows.Add(values);
             }
 
             return dataTable;
-        }
-
-        private double FDistribution(double value, int dfn, int dfd)
-        {
-            return new FisherSnedecor(dfn, dfd).CumulativeDistribution(value);
-        }
-
-        private double FDistributionCriticalValue(double probability, int dfn, int dfd)
-        {
-            return new FisherSnedecor(dfn, dfd).InverseCumulativeDistribution(probability);
-        }
-
-        private double CalculateUhom1(double Ubb1, double UWithin)
-        {
-            return Math.Sqrt(Math.Pow(Ubb1, 2) + Math.Pow(UWithin, 2));
-        }
-
-        private double CalculateUhom2(double Ubb1, double UWithin, double umethod)
-        {
-            return Math.Sqrt(Math.Pow(Ubb1, 2) + Math.Pow(UWithin, 2) + Math.Pow(umethod, 2));
         }
     }
 }
