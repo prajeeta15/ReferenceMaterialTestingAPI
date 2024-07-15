@@ -1,8 +1,9 @@
-﻿using MathNet.Numerics;
+using MathNet.Numerics;
 using MathNet.Numerics.LinearRegression;
 using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RMPAPI.Models;
 using System.IO;
 using System.Linq;
 
@@ -66,7 +67,7 @@ namespace RMPAPI.Controllers
                 var adjustedRSquare = 1 - ((1 - rSquare) * (observations - 1) / (observations - 2));
                 var multipleR = Math.Sqrt(rSquare);
 
-                var regressionStatistics = new
+                var regressionStatistics = new STSRegressionStatistics
                 {
                     MultipleR = multipleR,
                     RSquare = rSquare,
@@ -88,7 +89,7 @@ namespace RMPAPI.Controllers
                 var fValue = msRegression / msResidual;
                 var significanceF = 1 - MathNet.Numerics.Distributions.FisherSnedecor.CDF(dfRegression, dfResidual, fValue);
 
-                var anovaStatistics = new
+                var anovaStatistics = new STSAnovaStatistics
                 {
                     DfRegression = dfRegression,
                     DfResidual = dfResidual,
@@ -145,7 +146,7 @@ namespace RMPAPI.Controllers
                 var ULTS24 = U_LTS[4];
                 var RelativeSTS = Math.Round((ULTS24 * 100) / avgDensity, 2);
 
-                var analysis = new
+                var analysis = new STSAnalysis
                 {
                     Intercept = intercept,
                     Slope = slope,
@@ -182,8 +183,5 @@ namespace RMPAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
-
-
     }
 }
