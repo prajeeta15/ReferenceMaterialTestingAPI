@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,16 +8,20 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            background-color: #f4f4f4;
         }
 
         .container {
             border: 1px solid #ccc;
             padding: 20px;
             margin-bottom: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
             .container h2 {
-                background-color: seagreen;
+                background-color: #ffdc02;
                 color: white;
                 padding: 10px 20px;
                 border-radius: 5px 5px 0 0;
@@ -30,7 +34,7 @@
 
         .btn {
             padding: 10px 20px;
-            background-color: #007bff;
+            background-color: #017dc5;
             color: #fff;
             border: none;
             cursor: pointer;
@@ -38,7 +42,7 @@
         }
 
             .btn:hover {
-                background-color: cornflowerblue;
+                background-color: #218838;
             }
 
         .result {
@@ -46,6 +50,16 @@
             padding: 10px;
             border: 1px solid #ccc;
             background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+            .result h3 {
+                margin-top: 0;
+            }
+
+        .download-btn {
+            margin-top: 10px;
+            background-color: #28a745;
         }
 
         label {
@@ -59,6 +73,34 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            overflow-wrap: break-word;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .table-container {
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -141,7 +183,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    displayResult('characterizationResult', 'Characterization API Response', data);
+                    displayMultipleTables('characterizationResult', 'Characterization API Response', data);
                 })
                 .catch(error => {
                     displayError('characterizationResult', 'Error calling Characterization API', error);
@@ -163,7 +205,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    displayResult('homogeneityResult', 'Homogeneity Testing API Response', data);
+                    displayHomogeneityTables('homogeneityResult', 'Homogeneity Testing API Response', data);
                 })
                 .catch(error => {
                     displayError('homogeneityResult', 'Error calling Homogeneity Testing API', error);
@@ -184,7 +226,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    displayResult('ltsResult', 'Long Term Stability API Response', data);
+                    displayLtsStsTables('ltsResult', 'Long Term Stability API Response', data);
                 })
                 .catch(error => {
                     displayError('ltsResult', 'Error calling Long Term Stability API', error);
@@ -205,38 +247,247 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    displayResult('stsResult', 'Short Term Stability API Response', data);
+                    displayLtsStsTables('stsResult', 'Short Term Stability API Response', data);
                 })
                 .catch(error => {
                     displayError('stsResult', 'Error calling Short Term Stability API', error);
                 });
         });
 
-        /* Helper function to display API response */
-        function displayResult(resultId, title, data) {
+        /* Helper function to display multiple tables */
+        function displayMultipleTables(resultId, title, data) {
             var resultContainer = document.getElementById(resultId);
-            resultContainer.innerHTML = '<h3>' + title + ':</h3>' +
-                '<pre>' + JSON.stringify(data, null, 2) + '</pre>' +
-                '<div><a href="#" onclick="downloadResult(\'' + JSON.stringify(data) + '\')">Download Result</a></div>';
+            resultContainer.innerHTML = '<h3>' + title + '</h3>';
+
+            function createTableFromData(data, tableTitle) {
+                var tableContainer = document.createElement('div');
+                tableContainer.classList.add('table-container');
+
+                var tableTitleElement = document.createElement('h4');
+                tableTitleElement.innerText = tableTitle;
+                tableContainer.appendChild(tableTitleElement);
+
+                var tableWrapper = document.createElement('div');
+                tableWrapper.classList.add('table-wrapper');
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                // Add headers
+                var headerRow = document.createElement('tr');
+                Object.keys(data[0]).forEach(key => {
+                    var th = document.createElement('th');
+                    th.innerText = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+
+                // Add data rows
+                data.forEach(row => {
+                    var tr = document.createElement('tr');
+                    Object.values(row).forEach(value => {
+                        var td = document.createElement('td');
+                        td.innerText = value;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+                tableContainer.appendChild(tableWrapper);
+                resultContainer.appendChild(tableContainer);
+            }
+
+            if (Array.isArray(data)) {
+                createTableFromData(data, 'Results');
+            } else if (typeof data === 'object') {
+                Object.keys(data).forEach(key => {
+                    if (Array.isArray(data[key])) {
+                        createTableFromData(data[key], key);
+                    } else {
+                        var singleDataContainer = document.createElement('div');
+                        singleDataContainer.classList.add('result');
+                        singleDataContainer.innerHTML = '<h4>' + key + '</h4><pre>' + JSON.stringify(data[key], null, 2) + '</pre>';
+                        resultContainer.appendChild(singleDataContainer);
+                    }
+                });
+            } else {
+                var singleDataContainer = document.createElement('div');
+                singleDataContainer.classList.add('result');
+                singleDataContainer.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                resultContainer.appendChild(singleDataContainer);
+            }
+
+            addDownloadButton(resultContainer, data);
         }
 
-        /* Helper function to display API error */
+        /* Helper function to display homogeneity testing tables */
+        function displayHomogeneityTables(resultId, title, data) {
+            var resultContainer = document.getElementById(resultId);
+            resultContainer.innerHTML = '<h3>' + title + '</h3>';
+
+            function createTableFromData(data, tableTitle) {
+                var tableContainer = document.createElement('div');
+                tableContainer.classList.add('table-container');
+
+                var tableTitleElement = document.createElement('h4');
+                tableTitleElement.innerText = tableTitle;
+                tableContainer.appendChild(tableTitleElement);
+
+                var tableWrapper = document.createElement('div');
+                tableWrapper.classList.add('table-wrapper');
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                // Add headers
+                var headerRow = document.createElement('tr');
+                Object.keys(data[0]).forEach(key => {
+                    var th = document.createElement('th');
+                    th.innerText = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+
+                // Add data rows
+                data.forEach(row => {
+                    var tr = document.createElement('tr');
+                    Object.values(row).forEach(value => {
+                        var td = document.createElement('td');
+                        td.innerText = value;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+                tableContainer.appendChild(tableWrapper);
+                resultContainer.appendChild(tableContainer);
+            }
+
+            if (Array.isArray(data)) {
+                createTableFromData(data, 'Results');
+            } else if (typeof data === 'object') {
+                Object.keys(data).forEach(key => {
+                    if (key === 'Results Table' || key === 'ANOVA' || key === 'Delta Values' || key === 'UL Delta Values' || key === 'ULTS') {
+                        createTableFromData(data[key], key);
+                    } else if (Array.isArray(data[key])) {
+                        createTableFromData(data[key], key);
+                    } else {
+                        var singleDataContainer = document.createElement('div');
+                        singleDataContainer.classList.add('result');
+                        singleDataContainer.innerHTML = '<h4>' + key + '</h4><pre>' + JSON.stringify(data[key], null, 2) + '</pre>';
+                        resultContainer.appendChild(singleDataContainer);
+                    }
+                });
+            } else {
+                var singleDataContainer = document.createElement('div');
+                singleDataContainer.classList.add('result');
+                singleDataContainer.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                resultContainer.appendChild(singleDataContainer);
+            }
+
+            addDownloadButton(resultContainer, data);
+        }
+
+        /* Helper function to display LTS/STS tables */
+        function displayLtsStsTables(resultId, title, data) {
+            var resultContainer = document.getElementById(resultId);
+            resultContainer.innerHTML = '<h3>' + title + '</h3>';
+
+            function createTableFromData(data, tableTitle) {
+                var tableContainer = document.createElement('div');
+                tableContainer.classList.add('table-container');
+
+                var tableTitleElement = document.createElement('h4');
+                tableTitleElement.innerText = tableTitle;
+                tableContainer.appendChild(tableTitleElement);
+
+                var tableWrapper = document.createElement('div');
+                tableWrapper.classList.add('table-wrapper');
+
+                var table = document.createElement('table');
+                var thead = document.createElement('thead');
+                var tbody = document.createElement('tbody');
+
+                // Add headers
+                var headerRow = document.createElement('tr');
+                Object.keys(data[0]).forEach(key => {
+                    var th = document.createElement('th');
+                    th.innerText = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+
+                // Add data rows
+                data.forEach(row => {
+                    var tr = document.createElement('tr');
+                    Object.values(row).forEach(value => {
+                        var td = document.createElement('td');
+                        td.innerText = value;
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                tableWrapper.appendChild(table);
+                tableContainer.appendChild(tableWrapper);
+                resultContainer.appendChild(tableContainer);
+            }
+
+            if (Array.isArray(data)) {
+                createTableFromData(data, 'Results');
+            } else if (typeof data === 'object') {
+                Object.keys(data).forEach(key => {
+                    if (key === 'Delta Values' || key === 'UL Delta Values' || key === 'ULTS') {
+                        createTableFromData(data[key], key);
+                    } else if (Array.isArray(data[key])) {
+                        createTableFromData(data[key], key);
+                    } else {
+                        var singleDataContainer = document.createElement('div');
+                        singleDataContainer.classList.add('result');
+                        singleDataContainer.innerHTML = '<h4>' + key + '</h4><pre>' + JSON.stringify(data[key], null, 2) + '</pre>';
+                        resultContainer.appendChild(singleDataContainer);
+                    }
+                });
+            } else {
+                var singleDataContainer = document.createElement('div');
+                singleDataContainer.classList.add('result');
+                singleDataContainer.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                resultContainer.appendChild(singleDataContainer);
+            }
+
+            addDownloadButton(resultContainer, data);
+        }
+
+        /* Helper function to display error messages */
         function displayError(resultId, message, error) {
             var resultContainer = document.getElementById(resultId);
-            resultContainer.innerHTML = '<div style="color: red;">' + message + ': ' + error + '</div>';
+            resultContainer.innerHTML = '<h3>' + message + ':</h3><pre>' + error + '</pre>';
         }
 
-        /* Helper function to download result as JSON */
-        function downloadResult(data) {
-            var blob = new Blob([data], { type: 'application/json' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'api_response.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        /* Helper function to add a download button for the JSON data */
+        function addDownloadButton(container, data) {
+            var downloadBtn = document.createElement('button');
+            downloadBtn.classList.add('btn', 'download-btn');
+            downloadBtn.innerText = 'Download JSON';
+            downloadBtn.addEventListener('click', function () {
+                var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2));
+                var downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute('href', dataStr);
+                downloadAnchorNode.setAttribute('download', 'results.json');
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            });
+            container.appendChild(downloadBtn);
         }
     </script>
 </body>
