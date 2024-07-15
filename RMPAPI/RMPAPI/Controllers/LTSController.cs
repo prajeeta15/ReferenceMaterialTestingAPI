@@ -1,4 +1,4 @@
-﻿using MathNet.Numerics;
+using MathNet.Numerics;
 using MathNet.Numerics.LinearRegression;
 using MathNet.Numerics.Statistics;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 
 namespace RMPAPI.Controllers
 {
@@ -68,7 +69,7 @@ namespace RMPAPI.Controllers
                 var adjustedRSquare = 1 - ((1 - rSquare) * (observations - 1) / (observations - 2));
                 var multipleR = Math.Sqrt(rSquare);
 
-                var regressionStatistics = new
+                var regressionStatistics = new RegressionStatistics
                 {
                     MultipleR = multipleR,
                     RSquare = rSquare,
@@ -90,7 +91,7 @@ namespace RMPAPI.Controllers
                 var fValue = msRegression / msResidual;
                 var significanceF = 1 - MathNet.Numerics.Distributions.FisherSnedecor.CDF(dfRegression, dfResidual, fValue);
 
-                var anovaStatistics = new
+                var anovaStatistics = new AnovaStatistics
                 {
                     DfRegression = dfRegression,
                     DfResidual = dfResidual,
@@ -134,7 +135,7 @@ namespace RMPAPI.Controllers
 
                 // Relative LTS calculated at 12 months 
 
-                var analysis = new
+                var analysis = new Analysis
                 {
                     Intercept = intercept,
                     Slope = slope,
@@ -152,14 +153,14 @@ namespace RMPAPI.Controllers
 
                 var pValueSignificance = pValueSlope < 0.05 ? "Since P-value is less than 0.05 there is a significant trend." : "Since P-value is greater than 0.05 there is no significant trend.";
 
-                var result = new
+                var result = new LTSResult
                 {
                     RegressionStatistics = regressionStatistics,
                     AnovaStatistics = anovaStatistics,
                     Analysis = analysis,
                     PValueSignificance = pValueSignificance,
                     ULTS = U_LTS,
-                    Relative_LTS_percentage = RelativeLTS
+                    RelativeLTSPercentage = RelativeLTS
                 };
 
                 return Ok(result);
@@ -184,6 +185,59 @@ namespace RMPAPI.Controllers
 
             return U_LTS;
         }
+    }
 
+    public class RegressionStatistics
+    {
+        public double MultipleR { get; set; }
+        public double RSquare { get; set; }
+        public double AdjustedRSquare { get; set; }
+        public double StandardError { get; set; }
+        public int Observations { get; set; }
+    }
+
+    public class AnovaStatistics
+    {
+        public int DfRegression { get; set; }
+        public int DfResidual { get; set; }
+        public int DfTotal { get; set; }
+        public double SsRegression { get; set; }
+        public double SsResidual { get; set; }
+        public double MsRegression { get; set; }
+        public double MsResidual { get; set; }
+        public double FValue { get; set; }
+        public double SignificanceF { get; set; }
+    }
+
+    public class Analysis
+    {
+        public double Intercept { get; set; }
+        public double Slope { get; set; }
+        public double StandardErrorIntercept { get; set; }
+        public double StandardErrorSlope { get; set; }
+        public double TStatIntercept { get; set; }
+        public double TStatSlope { get; set; }
+        public double PValueIntercept { get; set; }
+        public double PValueSlope { get; set; }
+        public double Lower95Intercept { get; set; }
+        public double Upper95Intercept { get; set; }
+        public double Lower95Slope { get; set; }
+        public double Upper95Slope { get; set; }
+    }
+
+    public class LTSResult
+    {
+        public RegressionStatistics RegressionStatistics { get; set; }
+        public AnovaStatistics AnovaStatistics { get; set; }
+        public Analysis Analysis { get; set; }
+        public string PValueSignificance { get; set; }
+        public double[] ULTS { get; set; }
+        public double RelativeLTSPercentage { get; set; }
+    }
+
+    public class LTSData
+    {
+        public int Month { get; set; }
+        public double Density { get; set; }
     }
 }
