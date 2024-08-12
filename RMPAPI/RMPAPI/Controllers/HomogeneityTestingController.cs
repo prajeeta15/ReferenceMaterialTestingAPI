@@ -15,7 +15,7 @@ namespace RMPAPI.Controllers
     public class HomogeneityTestingController : ControllerBase
     {
         [HttpPost("HomogeneityTesting")]
-        public async Task<IActionResult> HomogeneityTesting(IFormFile jsonfile, [FromForm] double probability, double umethod)
+        public async Task<IActionResult> HomogeneityTesting(IFormFile jsonfile, [FromForm] double confidenceLevel, double umethod)
         {
             try
             {
@@ -106,32 +106,35 @@ namespace RMPAPI.Controllers
                 var FRows = MSB / MSE;
                 var FColumns = MSC / MSE;
 
-                var pValueRows = 1 - FDistribution(FRows, dfRows, dfWithinRows);
-                var pValueColumns = 1 - FDistribution(FColumns, dfColumns, dfWithinRows);
+                var pValueRows = 1 - FisherSnedecor.CDF(dfRows, dfWithinRows, FRows);
+                var pValueColumns = 1 - FisherSnedecor.CDF(dfColumns, dfWithinRows, FColumns);
 
-                probability = probability / 100;
+
                 var degreeFreedomRow = dfRows;
                 var degreeFreedomColumn = dfColumns;
                 var degreeFreedomWithin = dfWithinRows;
                 var dof = (dfWithinRows + dfColumns);
 
-                var fCritRows = FDistributionCriticalValue(1 - probability, dfRows, dfWithinRows);
-                var fCritColumns = FDistributionCriticalValue(1 - probability, dfColumns, dfWithinRows);
+                double levelOfSignificance = MapConfidenceToSignificance(confidenceLevel);
 
-                var fCritAt95 = FisherSnedecor.InvCDF(dfRows, dof, 1 - probability);
+                var fCritAt95 = FisherSnedecor.InvCDF(dfRows, dfWithinRows+dfColumns, 1 - levelOfSignificance);
+                var fCritRows = FisherSnedecor.InvCDF(dfRows, dfWithinRows, 1 - levelOfSignificance);
+                var fCritColumns = FisherSnedecor.InvCDF(dfColumns, dfWithinRows, 1 - levelOfSignificance);
+
                 var FValue = MSB / MSE;
                 var homogeneityTest = (FValue > fCritAt95) ? "FAIL HOMOGENEITY TEST" : "PASS HOMOGENEITY TEST";
 
-                var uHomogeneity = Math.Pow((stdDevA1 / Math.Sqrt(3)), 2);
+                var numberOfReplicates = 3.0; 
+                var uHomogeneity = Math.Max((MSB - MSE) / numberOfReplicates, 0);
                 var U2bb = uHomogeneity;
-                var RelativeHomogeneity = uHomogeneity / stdDevA1;
-                var Ubb1 = uHomogeneity;
-                var ubb2 = U2bb;
-                var SWithin = Math.Sqrt(U2bb);
-                var UWithin = SWithin;
+                var RelativeHomogeneity = uHomogeneity / stdDevA1 * 100;
+                var Ubb1 = Math.Sqrt(uHomogeneity);
+                var ubb2 = (Math.Sqrt(MSE / numberOfReplicates)) * Math.Pow(2 / dfWithinRows, 0.25);
+                var SWithin = Math.Sqrt(MSE);
+                var UWithin = SWithin / Math.Sqrt(numberOfReplicates); ;
 
-                var Uhom1 = uHomogeneity;
-                var Uhom2 = uHomogeneity;
+                var Uhom1 = Math.Sqrt(Math.Pow(Ubb1, 2) + Math.Pow(UWithin, 2));
+                var Uhom2 = Math.Sqrt(Math.Pow(Ubb1, 2) + Math.Pow(UWithin, 2) + Math.Pow(umethod, 2)); 
 
                 var result = new HomogeneityTestingResult
                 {
@@ -222,7 +225,25 @@ namespace RMPAPI.Controllers
 
         private static double FDistributionCriticalValue(double p, double d1, double d2)
         {
-            return FisherSnedecor.InvCDF(d1, d2, p);
+            return 1.0 - FisherSnedecor.InvCDF(d1, d2, p);
+        }
+
+        private static double MapConfidenceToSignificance(double confidenceLevel)
+        {
+            return confidenceLevel switch
+            {
+                60.0 => 0.40,
+                70.0 => 0.30,
+                80.0 => 0.20,
+                85.0 => 0.15,
+                90.0 => 0.10,
+                95.0 => 0.05,
+                98.0 => 0.02,
+                99.0 => 0.01,
+                99.8 => 0.002,
+                99.9 => 0.001,
+                _ => throw new ArgumentException("Invalid confidence level")
+            };
         }
 
         private static DataTable ToDataTable<T>(IList<T> data)
